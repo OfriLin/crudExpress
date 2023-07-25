@@ -1,23 +1,65 @@
 import express from 'express';
 import log from '@ajar/marker';
+import fs from 'fs/promises';
+
 
 const { PORT, HOST } = process.env;
 
-// console.log(process.env);
 
 const app = express()
+app.use(express.json());
 
+//middleware function that add new line to an http.log text file
+/********************** */
 
-app.get('/',  (req, res) => {
-    res.status(200).send('Hello Express!')
+//Read All
+app.get('/readAll',  (req, res) => {(async ()=>{
+let data = await fs.readFile('database.json');
+res.status(200).send(data)
+})().catch(log.error)
 })
 
-app.get('/users', (req, res,next) => {
-    res.status(200).send('Get all Users')
-})
+//Read
+app.get('/read/:item_id',  (req, res) => {(async ()=>{
+    let data = await fs.readFile('database.json');
+    const dataArray = JSON.parse(data);
+    for(let i=0;i<dataArray.length;i++){
+        if(dataArray[i].id == req.params.item_id){
+            res.status(200).send(dataArray[i])
+        }
+    }
+    res.status(200).send("Not found")
+    })().catch(log.error)
+    })
+
+//Create
+app.post('/create',  (req, res) => {(async ()=>{
+    let data = await fs.readFile('database.json');
+    const dataArray = JSON.parse(data);
+    dataArray.push(req.body);
+    await fs.writeFile('database.json', JSON.stringify(dataArray, null, 2));
+    res.status(200).send("Created successfully");
+    })().catch(log.error)
+    })
+
+//Update
+app.put('/update/:item_id',  (req, res) => {(async ()=>{
+    let data = await fs.readFile('database.json');
+    const dataArray = JSON.parse(data);
+    for(let i=0;i<dataArray.length;i++){
+        if(dataArray[i].id == req.params.item_id){
+            dataArray[i] = req.body;
+        }
+    }
+    await fs.writeFile('database.json', JSON.stringify(dataArray, null, 2));
+    res.status(200).send("Update successfully");
+    })().catch(log.error)
+    })
+
+//Delete
+/********************** */
 
 
-// '/search?food=burger&town=ashdod'
 
 
 app.listen(PORT, HOST,  ()=> {
